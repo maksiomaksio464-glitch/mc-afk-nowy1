@@ -4,7 +4,7 @@ const http = require('http');
 const url = require('url');
 const cron = require('node-cron');
 
-const NTFY_TOPIC = 'moj-aternos-12033';
+const NTFY_TOPIC = 'bot mc12';
 let botInstance = null;
 let isConnecting = false;
 let jumpInterval = null;
@@ -73,11 +73,10 @@ function createBot() {
 
   console.log('Łączenie bota z serwerem...');
 
+  // USUNIĘTO sztywny port i wersję - Mineflayer sam wykryje je z DNS i serwera
   const bot = mineflayer.createBot({
-    host: 'gramyreazemLdd.aternos.me',
-    port: 12033,
-    username: 'Maksioreks_afk',
-    version: '1.21.10'
+    host: 'sztabki.gg',
+    username: 'Mtt.Wojtas'
   });
 
   botInstance = bot;
@@ -85,7 +84,7 @@ function createBot() {
   bot.on('spawn', () => {
     isConnecting = false;
     console.log('Bot wszedł na serwer!');
-    sendPhoneAlert('Aternos: Bot Polaczony', 'Bot wszedl na serwer i rozpoczal skakanie.');
+    sendPhoneAlert('Bot MC: Polaczony', 'Bot wszedl na serwer sztabki.gg.');
 
     setTimeout(() => {
       if (botInstance) botInstance.chat('/survival');
@@ -96,7 +95,7 @@ function createBot() {
 
   bot.on('respawn', () => {
     console.log('Zmiana świata lub przeniesienie na inny serwer!');
-    sendPhoneAlert('Aternos: Przeniesienie', 'Bot zmienil wymiar, swiat lub zostal przeniesiony na inny sub-serwer.');
+    sendPhoneAlert('Bot MC: Przeniesienie', 'Bot zmienil wymiar lub sub-serwer.');
   });
 
   bot.on('kicked', (reason) => {
@@ -105,14 +104,14 @@ function createBot() {
       parsedReason = 'Podwójne logowanie (bot już był na serwerze)';
     }
     console.log('Bot wyrzucony/zabanowany:', parsedReason);
-    sendPhoneAlert('Aternos: Bot Wyrzucony/Ban', `Powod: ${parsedReason}`);
+    sendPhoneAlert('Bot MC: Wyrzucony/Ban', `Powod: ${parsedReason}`);
   });
 
   bot.on('end', (reason) => {
     console.log('Połączenie zerwane:', reason);
     if (jumpInterval) clearInterval(jumpInterval);
     botInstance = null;
-    sendPhoneAlert('Aternos: Serwer Offline', `Serwer zostal wylaczony lub zerwano polaczenie! (Powod: ${reason})`);
+    sendPhoneAlert('Bot MC: Offline', `Zerwano polaczenie! (Powod: ${reason})`);
     
     setTimeout(() => {
       isConnecting = false;
@@ -123,13 +122,13 @@ function createBot() {
   bot.on('error', (err) => {
     console.log('Błąd bota:', err.message);
     if (!err.message.includes('ECONNREFUSED') && !err.message.includes('protocol version')) {
-      sendPhoneAlert('Aternos: Blad Polaczenia', `Blad: ${err.message}`);
+      sendPhoneAlert('Bot MC: Blad Polaczenia', `Blad: ${err.message}`);
     }
   });
 
   bot.on('death', () => {
     console.log('Bot zginął!');
-    sendPhoneAlert('Aternos: Smierc Bota', 'Bot zginal na serwerze i wykonuje respawn.');
+    sendPhoneAlert('Bot MC: Smierc Bota', 'Bot zginal na serwerze.');
     bot.respawn();
   });
 }
@@ -168,7 +167,7 @@ function addSchedule(type, time, action) {
     target.setHours(parseInt(hour, 10), parseInt(minute, 10), 0, 0);
 
     if (target <= now) {
-      target.setDate(target.getDate() + 1); // Jeśli czas minął dzisiaj, ustaw na jutro
+      target.setDate(target.getDate() + 1);
     }
 
     const delay = target.getTime() - now.getTime();
@@ -202,9 +201,9 @@ http.createServer((req, res) => {
     const value = reqUrl.query.value;
 
     if (action === 'add_schedule') {
-      const type = reqUrl.query.type; // 'once' lub 'routine'
-      const time = reqUrl.query.time; // 'HH:MM'
-      const schedAction = reqUrl.query.schedAction; // 'connect' lub 'quit'
+      const type = reqUrl.query.type;
+      const time = reqUrl.query.time;
+      const schedAction = reqUrl.query.schedAction;
       if (type && time && schedAction) {
         addSchedule(type, time, schedAction);
       }
@@ -224,7 +223,8 @@ http.createServer((req, res) => {
           break;
 
         case 'chat':
-          if (value) botInstance.chat(value);
+          // POPRAWKA: Odkodowanie znaku / i spacji wysłanych z przeglądarki
+          if (value) botInstance.chat(decodeURIComponent(value));
           break;
 
         case 'move':
@@ -274,7 +274,6 @@ http.createServer((req, res) => {
     }));
   }
 
-  // Generowanie listy zadań HTML
   const scheduleRows = schedules.map(s => `
     <li style="margin-bottom: 8px; text-align: left; background: #2a2a2a; padding: 6px 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
       <span>
@@ -292,7 +291,7 @@ http.createServer((req, res) => {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Panel Bota Maksioreks_afk</title>
+      <title>Panel Bota Mtt.Wojtas</title>
       <style>
         body { font-family: Arial, sans-serif; background: #121212; color: #fff; text-align: center; padding: 20px; }
         .card { background: #1e1e1e; max-width: 450px; margin: 0 auto; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
@@ -388,7 +387,7 @@ http.createServer((req, res) => {
         <hr style="border-color: #333; margin: 20px 0;">
 
         <h3>Wiadomość / Komenda</h3>
-        <input type="text" id="chatInput" placeholder="/survival lub cześć...">
+        <input type="text" id="chatInput" placeholder="/login hasło lub cześć...">
         <button onclick="sendChat()">Wyślij</button>
       </div>
 
@@ -408,7 +407,7 @@ http.createServer((req, res) => {
           const type = document.getElementById('schedType').value;
           if (!time) return alert('Wybierz godzinę!');
 
-          fetch(\`/api/control?action=add_schedule&type=\${type}&time=\${time}&schedAction=\${schedAction}\`)
+          fetch('/api/control?action=add_schedule&type=' + type + '&time=' + time + '&schedAction=' + schedAction)
             .then(() => setTimeout(() => location.reload(), 300));
         }
 
@@ -419,7 +418,10 @@ http.createServer((req, res) => {
 
         function sendChat() {
           const val = document.getElementById('chatInput').value;
-          if (val) send('chat', encodeURIComponent(val));
+          if (val) {
+            send('chat', encodeURIComponent(val));
+            document.getElementById('chatInput').value = '';
+          }
         }
       </script>
     </body>
