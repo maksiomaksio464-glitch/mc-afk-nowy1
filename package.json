@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "mineflayer": "^4.20.1",
-    "node-cron": "^3.0.3"
+    "node-cron": "^3.0.3",
+    "socks": "^2.8.3"
   }
 }
