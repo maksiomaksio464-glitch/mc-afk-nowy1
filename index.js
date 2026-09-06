@@ -76,7 +76,7 @@ function createBot() {
   // USUNIĘTO sztywny port i wersję - Mineflayer sam wykryje je z DNS i serwera
   const bot = mineflayer.createBot({
     host: 'sztabki.gg',
-    username: 'Mtt.Wojtas'
+    username: 'MttWojtas'
   });
 
   botInstance = bot;
