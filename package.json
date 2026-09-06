@@ -1,0 +1,13 @@
+{
+  "name": "mc-bot",
+  "version": "1.0.0",
+  "description": "Bot Minecraft Aternos",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "mineflayer": "^4.20.1",
+    "node-cron": "^3.0.3"
+  }
+}
