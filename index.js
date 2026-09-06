@@ -1,8 +1,8 @@
 const mineflayer = require('mineflayer');
 const https = require('https');
 const http = require('http');
-const url = require('url');
 const cron = require('node-cron');
+const config = require('./config');
 
 const NTFY_TOPIC = 'bot-mc12';
 let botInstance = null;
@@ -73,12 +73,21 @@ function createBot() {
 
   console.log('Łączenie bota z serwerem...');
 
-  // USUNIĘTO sztywny port i wersję - Mineflayer sam wykryje je z DNS i serwera
-  const bot = mineflayer.createBot({
+  const botOptions = {
     host: 'sztabki.gg',
     username: 'MttWojtas'
-  });
+  };
 
+  // Dołączenie konfiguracji Proxy SOCKS5 z pliku config.js
+  if (config.useProxy && config.proxyHost) {
+    console.log(`Używanie Proxy SOCKS5: ${config.proxyHost}:${config.proxyPort}`);
+    botOptions.socks5Host = config.proxyHost;
+    botOptions.socks5Port = config.proxyPort;
+    if (config.proxyUsername) botOptions.socks5Username = config.proxyUsername;
+    if (config.proxyPassword) botOptions.socks5Password = config.proxyPassword;
+  }
+
+  const bot = mineflayer.createBot(botOptions);
   botInstance = bot;
 
   bot.on('spawn', () => {
@@ -194,16 +203,16 @@ function removeSchedule(id) {
 // ---------------- PANEL HTTP / WWW ----------------
 const PORT = process.env.PORT || 3000;
 http.createServer((req, res) => {
-  const reqUrl = url.parse(req.url, true);
+  const reqUrl = new URL(req.url, `http://${req.headers.host}`);
 
   if (reqUrl.pathname === '/api/control') {
-    const action = reqUrl.query.action;
-    const value = reqUrl.query.value;
+    const action = reqUrl.searchParams.get('action');
+    const value = reqUrl.searchParams.get('value');
 
     if (action === 'add_schedule') {
-      const type = reqUrl.query.type;
-      const time = reqUrl.query.time;
-      const schedAction = reqUrl.query.schedAction;
+      const type = reqUrl.searchParams.get('type');
+      const time = reqUrl.searchParams.get('time');
+      const schedAction = reqUrl.searchParams.get('schedAction');
       if (type && time && schedAction) {
         addSchedule(type, time, schedAction);
       }
@@ -223,7 +232,6 @@ http.createServer((req, res) => {
           break;
 
         case 'chat':
-          // POPRAWKA: Odkodowanie znaku / i spacji wysłanych z przeglądarki
           if (value) botInstance.chat(decodeURIComponent(value));
           break;
 
