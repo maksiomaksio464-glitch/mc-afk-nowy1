@@ -4,7 +4,7 @@ const http = require('http');
 const url = require('url');
 const cron = require('node-cron');
 
-const NTFY_TOPIC = 'bot mc12';
+const NTFY_TOPIC = 'bot-mc12';
 let botInstance = null;
 let isConnecting = false;
 let jumpInterval = null;
